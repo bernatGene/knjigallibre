@@ -1,12 +1,10 @@
 import asyncio
-from enum import IntFlag, auto
 import time
 
 from rich import print
 from rich.live import Live
 from rich.text import Text
 from rich.style import Style
-from rich.highlighter import Highlighter
 
 
 def paragraph(word="") -> Text:
@@ -77,14 +75,6 @@ async def handle_echo(reader, writer: asyncio.StreamWriter):
             live.update(ttest.get_text())
             if data == b"":
                 break
-
-        # print(f"Send: {message!r}")
-        # writer.write(data)
-        # await writer.drain()
-
-    # print("Close the connection")
-    # writer.close()
-    # await writer.wait_closed()
 
 
 async def main():
