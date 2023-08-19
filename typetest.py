@@ -77,6 +77,20 @@ async def handle_echo(reader, writer: asyncio.StreamWriter):
                 break
 
 
+async def run(cmd):
+    proc = await asyncio.create_subprocess_shell(
+        cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+    )
+
+    stdout, stderr = await proc.communicate()
+
+    # print(f"[{cmd!r} exited with {proc.returncode}]")
+    # if stdout:
+    #     print(f"[stdout]\n{stdout.decode()}")
+    # if stderr:
+    #     print(f"[stderr]\n{stderr.decode()}")
+
+
 async def main():
     server = await asyncio.start_server(handle_echo, "127.0.0.1", 8888)
 
@@ -84,7 +98,10 @@ async def main():
     print(f"Serving on {addrs}")
 
     async with server:
-        await server.serve_forever()
+        await asyncio.gather(
+            run("python typtestclient.py"),
+            server.serve_forever(),
+        )
 
 
 asyncio.run(main())
