@@ -20,6 +20,7 @@ from textual.widgets import Button, Markdown
 from textual import on
 from textual.events import Resize
 
+
 class PyteDisplay:
     def __init__(self, lines):
         self.lines = lines
@@ -50,7 +51,7 @@ class Terminal(Widget, can_focus=True):
 
     def render(self):
         return self._display
-   
+
     @on(Resize)
     def set_term_size(self, event: Resize):
         self._screen.resize(event.container_size.height, event.container_size.width)
@@ -79,14 +80,14 @@ class Terminal(Widget, can_focus=True):
                         cursor.stylize("reverse")
                         new_text = text[:x]
                         new_text.append(cursor)
-                        new_text.append(text[x + 1:])
+                        new_text.append(text[x + 1 :])
                         text = new_text
                     lines.append(text)
                 self._display = PyteDisplay(lines)
                 self.refresh()
 
 
-class TerminalController: 
+class TerminalController:
     def __init__(self, ncol, nrow) -> None:
         self.ncol = ncol
         self.nrow = nrow
@@ -96,8 +97,57 @@ class TerminalController:
         self.recv_queue = asyncio.Queue()
         self.send_queue = asyncio.Queue()
         self.event = asyncio.Event()
-
     
+    def open_terminal(self):
+        pid, fd = pty.fork()
+        if pid == 0:
+            argv = shlex.split("zsh")
+            env = dict(
+                TERM="linux",
+                LC_ALL="en_GB.UTF-8",
+                COLUMNS=str(self.ncol),
+                LINES=str(self.nrow),
+            )
+            os.execvpe(argv[0], argv, env)
+        return fd
+
+    def create_async_tasks(self, widget: Terminal):
+        self._run_task = asyncio.create_task(self._run())
+        self._dat_task = asyncio.create_task(self._send_data())
+        self._rec_task = asyncio.create_task(widget.recv())
+
+    async def _run(self):
+        loop = asyncio.get_running_loop()
+
+        def on_output():
+            try:
+                self.data_or_disconnect = self.p_out.read(65536).decode()
+                self.event.set()
+            except Exception:
+                loop.remove_reader(self.p_out)
+                self.data_or_disconnect = None
+                self.event.set()
+
+        loop.add_reader(self.p_out, on_output)
+        await self.send_queue.put(["setup", {}])
+        while True:
+            msg = await self.recv_queue.get()
+            if msg[0] == "stdin":
+                self.p_out.write(msg[1].encode())
+            elif msg[0] == "set_size":
+                winsize = struct.pack("HH", msg[1], msg[2])
+                fcntl.ioctl(self.fd, termios.TIOCSWINSZ, winsize)
+
+    async def _send_data(self):
+        while True:
+            await self.event.wait()
+            self.event.clear()
+            if self.data_or_disconnect is None:
+                await self.send_queue.put(["disconnect", 1])
+            else:
+                await self.send_queue.put(["stdout", self.data_or_disconnect])
+
+
 
 class TerminalEmulator(App):
     CSS_PATH = "terminal.tcss"
@@ -128,8 +178,7 @@ class TerminalEmulator(App):
         # term.styles.border = ("heavy", "white")
         # term.styles.height = 5 + 2
         self.log("term size", term.size)
-        term._screen.resize(lines=5)
-
+        # term._screen.resize(lines=5)
 
     def on_button_pressed(self, event) -> None:
         # self.query_one(Markdown).focus()
@@ -140,12 +189,16 @@ class TerminalEmulator(App):
             return
         term.display = not term.display
 
-
     def open_terminal(self):
         pid, fd = pty.fork()
         if pid == 0:
             argv = shlex.split("zsh")
-            env = dict(TERM="linux", LC_ALL="en_GB.UTF-8", COLUMNS=str(self.ncol), LINES=str(self.nrow))
+            env = dict(
+                TERM="linux",
+                LC_ALL="en_GB.UTF-8",
+                COLUMNS=str(self.ncol),
+                LINES=str(self.nrow),
+            )
             os.execvpe(argv[0], argv, env)
         return fd
 
