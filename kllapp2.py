@@ -5,12 +5,13 @@ from textual.app import App, ComposeResult
 from textual.message import Message
 from textual.strip import Strip
 from textual.widget import Widget
-from textual.widgets import Static, Switch
+from textual.widgets import Static, Switch, Button
 from textual.geometry import Size
 from textual.containers import Vertical, Horizontal, VerticalScroll
 from textual.scroll_view import ScrollView
 from textual.events import Key
 from rich.segment import Segment
+from mediaplayer import MediaPlayer
 
 
 class BookScroll(ScrollView):
@@ -61,16 +62,24 @@ class KLlApp(App):
     CSS_PATH = "kllapp2.tcss"
 
     def compose(self) -> ComposeResult:
+        self.media_player = MediaPlayer(list(Path("media/piknik").glob("*.mp4"))[0])
         with Horizontal():
             with Vertical(classes="sidebar"):
                 yield Static("De/Couple scroll (C)")
                 yield Switch(False, id="scroll_couple")
+                yield Button(label="Play (P)", id="play_audio")
             yield BookScroll(Path("media/piknik/picnic_utf8.txt"), id="ru")
             yield BookScroll(Path("media/piknik/picnic_eng.txt"), id="en")
+        
+    def on_button_pressed(self) -> None:
+        if self.media_player.is_playing():
+            self.media_player.pause()
+        else:
+            self.media_player.play()
 
+    
     @on(BookScroll.ScrolledBook)
     def scroll_sibling(self, event: BookScroll.ScrolledBook) -> None:
-        self.receiveds += 1
         if not self.query_one("#scroll_couple", Switch).value:
             return
         a, b = self.query(BookScroll)
