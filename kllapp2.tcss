@@ -1,0 +1,30 @@
+.sidebar {
+    dock: left;
+    width: 25;
+    height: 100%;
+}
+
+#mediacontrol > Button {
+    width: 0.5;
+    outline: red;
+}
+
+
+BookText {
+    width: 90;
+}
+
+Bar {
+    height: 5;
+    content-align: center middle;
+    text-style: bold;
+    margin: 1 2;
+    color: $text;
+}
+
+ScreenText {
+    height: 50h;
+    width: 100w;
+    border: heavy white;
+    background: $primary;
+}
