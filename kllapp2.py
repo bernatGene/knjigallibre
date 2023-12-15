@@ -61,17 +61,23 @@ class BookScroll(ScrollView):
 
 
 class MediaPlayerControl(Static):
-    media_player = MediaPlayer(sorted(list(Path("media/piknik").glob("*.mp4")))[0])
+    media_player = MediaPlayer.from_playlist((list(Path("media/piknik").glob("*.mp4"))))
     curr_time = reactive(media_player.get_str_time())
 
     def on_mount(self) -> None:
         self.update_timer = self.set_interval(1 / 10, self.update_time, pause=True)
 
     def compose(self) -> ComposeResult:
-        yield Button(label="⏮", id="seek_b", classes="media_button")
+        yield Button(label="⏴", id="seek_b", classes="media_button")
         yield Button(label="⏯", id="play_pause", classes="media_button")
-        yield Button(label="⏭", id="seek_f", classes="media_button")
-        yield Label()
+        yield Button(label="⏵︎", id="seek_f", classes="media_button")
+        yield Button(label="⏮", id="chap_b", classes="media_button")
+        yield Button(label="⏭︎", id="chap_f", classes="media_button")
+        yield Label(
+            f"{self.media_player.chapter_idx + 1}/{len(self.media_player.playlist)}",
+            id="chapter",
+        )
+        yield Label(id="time")
 
     def update_time(self):
         if not self.media_player.is_playing:
@@ -79,7 +85,11 @@ class MediaPlayerControl(Static):
         self.curr_time = self.media_player.get_str_time()
 
     def watch_curr_time(self, new_time):
-        self.query_one(Label).update(new_time)
+        self.query_one("#time", Label).update(new_time)
+
+    def update_chapter(self):
+        new_label = f"{self.media_player.chapter_idx + 1}/{len(self.media_player.playlist)}"
+        self.query_one("#chapter", Label).update(new_label)
 
     def play_pause(self):
         if self.media_player.is_playing():
@@ -98,6 +108,12 @@ class MediaPlayerControl(Static):
                 self.media_player.set_time(ts - seek_time)
             case "seek_f":
                 self.media_player.set_time(ts + seek_time)
+            case "chap_b":
+                self.media_player.prev_item()
+                self.update_chapter()
+            case "chap_f":
+                self.media_player.next_item()
+                self.update_chapter()
             case "play_pause":
                 self.play_pause()
 
