@@ -39,7 +39,7 @@ class MediaPlayer:
     def play(self) -> None:
         self.player.play()
 
-    def seek(self, ts_ms: int) -> None:
+    def set_time(self, ts_ms: int) -> None:
         self.player.set_time(ts_ms)
 
 
@@ -64,7 +64,7 @@ async def main():
         player.play()
         await asyncio.sleep(4)
         print(player.get_time())
-        player.seek(t)
+        player.set_time(t)
         await asyncio.sleep(10)
 
     player = MediaPlayer(

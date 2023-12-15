@@ -4,6 +4,12 @@
     height: 100%;
 }
 
+#mediacontrol > Button {
+    width: 0.5;
+    outline: red;
+}
+
+
 BookText {
     width: 90;
 }
