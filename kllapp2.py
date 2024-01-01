@@ -1,5 +1,4 @@
 from pathlib import Path
-from rich.console import RenderableType
 
 from textual.reactive import reactive
 from textual import events, on
@@ -9,7 +8,7 @@ from textual.strip import Strip
 from textual.widget import Widget
 from textual.widgets import Static, Switch, Button, Label
 from textual.geometry import Size
-from textual.containers import Vertical, Horizontal, VerticalScroll
+from textual.containers import Vertical, Horizontal
 from textual.scroll_view import ScrollView
 from textual.events import Key
 from rich.segment import Segment
@@ -88,7 +87,9 @@ class MediaPlayerControl(Static):
         self.query_one("#time", Label).update(new_time)
 
     def update_chapter(self):
-        new_label = f"{self.media_player.chapter_idx + 1}/{len(self.media_player.playlist)}"
+        new_label = (
+            f"{self.media_player.chapter_idx + 1}/{len(self.media_player.playlist)}"
+        )
         self.query_one("#chapter", Label).update(new_label)
 
     def play_pause(self):

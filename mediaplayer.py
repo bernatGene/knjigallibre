@@ -6,7 +6,7 @@ import vlc
 
 class MediaPlayer:
     def set_media(self, source_path):
-        vlc_instance = vlc.Instance()
+        vlc_instance = vlc.Instance('--no-xlib -q > /dev/null 2>&1') # options are to silence console output
         player = vlc_instance.media_player_new()
         media = vlc_instance.media_new(source_path.as_posix())
         player.set_media(media)
