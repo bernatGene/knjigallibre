@@ -1,0 +1,11 @@
+[project]
+name = "knjigallibre"
+version = "0.1.0"
+requires-python = ">=3.14"
+dependencies = [
+    "numpy>=2.4.4",
+    "piper-tts>=1.4.2",
+    "platformdirs>=4.9.6",
+    "sounddevice>=0.5.5",
+    "soundfile>=0.13.1",
+]
